@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "event-driven-fastapi-ml-api"
+version = "0.1.0"
+description = "A FastAPI App which uses EDA Patterns"
+authors = ["Lukas Scholz <lukas.scholz@deutschebahn.com>"]
+license = "Apache License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+celery = "^5.4.0"
+fastapi = "^0.115.6"
+pydantic = "^2.10.3"
+uvicorn = "^0.32.1"
+starlette = "^0.41.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
