@@ -1,21 +1,34 @@
+from typing import List
+
 from celery.result import AsyncResult
 from fastapi import FastAPI
 
 from app.models.job_status import JobStatus
-from app.celery_tasks.inference_task import add, celery_app
+from app.celery_tasks.inference_task import celery_app, detect_class_in_image
 
 from app.models.inference_job import InferenceJob
-from app.models.response import Response
 
 app = FastAPI()
 
 
-@app.post("/inference/", response_model=Response)
-async def create_inference_job(inference_job: InferenceJob):
-    result = add.delay(5,4)
+@app.post("/inference/", response_model=JobStatus)
+async def create_inference_job(inference_job: InferenceJob) -> JobStatus:
+    task = detect_class_in_image.delay(inference_job.model_dump())
 
-    return Response(response_image=str(result.get(timeout=1)))
+    return JobStatus(id=task.id, status="PENDING")
 
+@app.get("/results/{task_id}", response_model=JobStatus)
+def get_inference_result(task_id: str) -> JobStatus:
+    result = celery_app.AsyncResult(task_id)
+
+    if result.state == "PENDING":
+        return JobStatus(id=task_id, status="PENDING")
+    elif result.state == "SUCCESS":
+        return JobStatus(id=task_id, status="SUCCESS", result=result.result)
+    elif result.state == "FAILURE":
+        return JobStatus(id=task_id, status="FAILURE", error=str(result.info))
+
+    return JobStatus(id=task_id, status=result.state)
 @app.get("/status", response_model=JobStatus)
 def status(task_id: str) -> JobStatus:
     r = celery_app.AsyncResult(task_id)
