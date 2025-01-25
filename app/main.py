@@ -1,8 +1,7 @@
 import uuid
-from typing import List
 
 from celery.result import AsyncResult
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.core.celery_tasks.inference_task import celery_app, detect_class_in_image
 from app.core.db.db import create_db_and_tables, SessionDependency
@@ -50,6 +49,13 @@ def get_inference_result(result_request: ResultRequest, session: SessionDependen
 
     return JobStatus(id=result_request.task_id, status=result.state)
 
+@app.get("/inference/{inference_id}")
+def read_inference_request(inference_id: str, session: SessionDependency):
+    inference_job = session.get(InferenceRequest, uuid.UUID(inference_id))
+    if not inference_job:
+        raise HTTPException(status_code=404, detail="InferenceResult not found")
+
+    return inference_job
 
 @app.get("/status", response_model=JobStatus)
 def status(task_id: str) -> JobStatus:
