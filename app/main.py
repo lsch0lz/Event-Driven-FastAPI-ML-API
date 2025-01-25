@@ -7,6 +7,7 @@ from app.core.models.job_status import JobStatus
 from app.core.celery_tasks.inference_task import celery_app, detect_class_in_image
 
 from app.core.models.inference_job import InferenceJob
+from app.core.models.result_request import ResultRequest
 
 app = FastAPI()
 
@@ -17,18 +18,21 @@ async def create_inference_job(inference_job: InferenceJob) -> JobStatus:
 
     return JobStatus(id=task.id, status="PENDING")
 
-@app.get("/results/{task_id}", response_model=JobStatus)
-def get_inference_result(task_id: str) -> JobStatus:
-    result = celery_app.AsyncResult(task_id)
+
+@app.post("/results/", response_model=JobStatus)
+def get_inference_result(result_request: ResultRequest) -> JobStatus:
+    result = celery_app.AsyncResult(result_request.task_id)
 
     if result.state == "PENDING":
-        return JobStatus(id=task_id, status="PENDING")
+        return JobStatus(id=result_request.task_id, status="PENDING")
     elif result.state == "SUCCESS":
-        return JobStatus(id=task_id, status="SUCCESS", result=result.result)
+        return JobStatus(id=result_request.task_id, status="SUCCESS", result=result.result)
     elif result.state == "FAILURE":
-        return JobStatus(id=task_id, status="FAILURE", error=str(result.info))
+        return JobStatus(id=result_request.task_id, status="FAILURE", error=str(result.info))
 
-    return JobStatus(id=task_id, status=result.state)
+    return JobStatus(id=result_request.task_id, status=result.state)
+
+
 @app.get("/status", response_model=JobStatus)
 def status(task_id: str) -> JobStatus:
     r = celery_app.AsyncResult(task_id)
