@@ -3,10 +3,10 @@ from typing import List
 from celery.result import AsyncResult
 from fastapi import FastAPI
 
-from app.models.job_status import JobStatus
-from app.celery_tasks.inference_task import celery_app, detect_class_in_image
+from app.core.models.job_status import JobStatus
+from app.core.celery_tasks.inference_task import celery_app, detect_class_in_image
 
-from app.models.inference_job import InferenceJob
+from app.core.models.inference_job import InferenceJob
 
 app = FastAPI()
 
