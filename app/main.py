@@ -1,15 +1,24 @@
+import uuid
 from typing import List
 
 from celery.result import AsyncResult
 from fastapi import FastAPI
 
-from app.core.models.job_status import JobStatus
 from app.core.celery_tasks.inference_task import celery_app, detect_class_in_image
+from app.core.db.db import create_db_and_tables, SessionDependency
+from app.core.db.inference_request import InferenceRequest
 
+from app.core.models.job_status import JobStatus
 from app.core.models.inference_job import InferenceJob
 from app.core.models.result_request import ResultRequest
 
 app = FastAPI()
+
+
+# TODO: Use LifeSpan instead of on_event
+@app.on_event("startup")
+def create_db_tables():
+    create_db_and_tables()
 
 
 @app.post("/inference/", response_model=JobStatus)
@@ -20,12 +29,21 @@ async def create_inference_job(inference_job: InferenceJob) -> JobStatus:
 
 
 @app.post("/results/", response_model=JobStatus)
-def get_inference_result(result_request: ResultRequest) -> JobStatus:
+def get_inference_result(result_request: ResultRequest, session: SessionDependency) -> JobStatus:
     result = celery_app.AsyncResult(result_request.task_id)
 
     if result.state == "PENDING":
         return JobStatus(id=result_request.task_id, status="PENDING")
     elif result.state == "SUCCESS":
+        inference_request: InferenceRequest = InferenceRequest(
+            id=uuid.uuid4(),
+            customer_key=result_request.customer_key,
+            request_time=1.0
+        )
+        session.add(inference_request)
+        session.commit()
+        session.refresh(inference_request)
+
         return JobStatus(id=result_request.task_id, status="SUCCESS", result=result.result)
     elif result.state == "FAILURE":
         return JobStatus(id=result_request.task_id, status="FAILURE", error=str(result.info))
