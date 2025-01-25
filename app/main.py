@@ -57,6 +57,17 @@ def read_inference_request(inference_id: str, session: SessionDependency):
 
     return inference_job
 
+@app.delete("/inference/{inference_id}")
+def delete_inference_request(inference_id: str, session: SessionDependency):
+    inference_job = session.get(InferenceRequest, uuid.UUID(inference_id))
+    if not inference_job:
+        raise HTTPException(status_code=404, detail="InferenceResult not found")
+
+    session.delete(inference_job)
+    session.commit()
+
+    return {"OK": True}
+
 @app.get("/status", response_model=JobStatus)
 def status(task_id: str) -> JobStatus:
     r = celery_app.AsyncResult(task_id)
