@@ -11,5 +11,5 @@ brew services start redis
 ```
 3. Start Celery Worker
 ```bash
-celery -A app.celery_tasks.inference_task worker --loglevel=info --concurrency 10
+celery -A app.core.celery_tasks.inference_task worker --loglevel=info --concurrency 10
 ```

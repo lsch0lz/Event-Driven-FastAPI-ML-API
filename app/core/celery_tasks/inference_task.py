@@ -8,13 +8,13 @@ from celery import Celery
 from ultralytics import YOLO
 from PIL import Image
 
-from app.models.inference_job import InferenceJob
-from app.models.inferenceresponse import Detection
+from app.core.models.inference_job import InferenceJob
+from app.core.models.inference_response import Detection
 
 celery_app = Celery("inference_task",
                     broker="pyamqp://guest@localhost//",
                     backend="redis://localhost:6379/0",
-                    include=["app.celery_tasks.inference_task"])
+                    include=["app.core.celery_tasks.inference_task"])
 
 celery_app.conf.update(
     CELERY_TASK_SERIALIZER='json',

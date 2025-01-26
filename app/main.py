@@ -1,35 +1,13 @@
-from typing import List
+from fastapi import FastAPI, HTTPException
 
-from celery.result import AsyncResult
-from fastapi import FastAPI
-
-from app.models.job_status import JobStatus
-from app.celery_tasks.inference_task import celery_app, detect_class_in_image
-
-from app.models.inference_job import InferenceJob
+from app.api.main import api_router
+from app.core.db.db import create_db_and_tables
 
 app = FastAPI()
+app.include_router(api_router)
 
 
-@app.post("/inference/", response_model=JobStatus)
-async def create_inference_job(inference_job: InferenceJob) -> JobStatus:
-    task = detect_class_in_image.delay(inference_job.model_dump())
-
-    return JobStatus(id=task.id, status="PENDING")
-
-@app.get("/results/{task_id}", response_model=JobStatus)
-def get_inference_result(task_id: str) -> JobStatus:
-    result = celery_app.AsyncResult(task_id)
-
-    if result.state == "PENDING":
-        return JobStatus(id=task_id, status="PENDING")
-    elif result.state == "SUCCESS":
-        return JobStatus(id=task_id, status="SUCCESS", result=result.result)
-    elif result.state == "FAILURE":
-        return JobStatus(id=task_id, status="FAILURE", error=str(result.info))
-
-    return JobStatus(id=task_id, status=result.state)
-@app.get("/status", response_model=JobStatus)
-def status(task_id: str) -> JobStatus:
-    r = celery_app.AsyncResult(task_id)
-    return JobStatus(id=r.task_id, status=r.status)
+# TODO: Use LifeSpan instead of on_event
+@app.on_event("startup")
+def create_db_tables():
+    create_db_and_tables()

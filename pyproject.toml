@@ -17,6 +17,7 @@ ultralytics = "^8.3.59"
 onnx = "^1.17.0"
 onnxruntime = "^1.20.1"
 redis = "^5.2.1"
+sqlmodel = "^0.0.22"
 
 
 [build-system]
