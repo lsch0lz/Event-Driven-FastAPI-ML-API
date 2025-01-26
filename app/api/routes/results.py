@@ -1,7 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
+from app.core.auth.security import get_current_active_user
 from app.core.celery_tasks.inference_task import celery_app
 
 from app.core.db.db import SessionDependency
@@ -12,7 +13,7 @@ from app.core.models.result_request import ResultRequest
 
 router = APIRouter(prefix="/results", tags=["results"])
 
-@router.post("/", response_model=JobStatus)
+@router.post("/", dependencies=[Depends(get_current_active_user)], response_model=JobStatus)
 def get_inference_result(result_request: ResultRequest, session: SessionDependency) -> JobStatus:
     result = celery_app.AsyncResult(result_request.task_id)
 
