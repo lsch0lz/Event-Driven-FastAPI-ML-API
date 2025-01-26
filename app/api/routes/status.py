@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from app.core.auth.security import get_current_active_user
 from app.core.celery_tasks.inference_task import celery_app
 
-from app.core.models.job_status import JobStatus
+from app.core.models import JobStatus
 
 router = APIRouter(prefix="/status", tags=["status"])
 

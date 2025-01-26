@@ -4,11 +4,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.core.auth.security import get_current_active_user
 from app.core.celery_tasks.inference_task import celery_app, detect_class_in_image
 
-from app.core.models.job_status import JobStatus
-from app.core.models.inference_job import InferenceJob
+from app.core.models import JobStatus, InferenceJob
 
-from app.core.db.db import create_db_and_tables, SessionDependency
-from app.core.db.inference_request import InferenceRequest
+from app.core.db.database import create_db_and_tables, SessionDependency
+from app.core.db.models import InferenceRequest
 
 router = APIRouter(prefix="/inference", tags=["inference"])
 

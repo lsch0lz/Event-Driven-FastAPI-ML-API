@@ -5,13 +5,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.core.auth.security import get_current_active_user
 from app.core.celery_tasks.inference_task import celery_app
 
-from app.core.db.db import SessionDependency
-from app.core.db.inference_request import InferenceRequest
+from app.core.db.database import SessionDependency
+from app.core.db.models import InferenceRequest
 
-from app.core.models.job_status import JobStatus
-from app.core.models.result_request import ResultRequest
+from app.core.models import JobStatus, ResultRequest
 
 router = APIRouter(prefix="/results", tags=["results"])
+
 
 @router.post("/", dependencies=[Depends(get_current_active_user)], response_model=JobStatus)
 def get_inference_result(result_request: ResultRequest, session: SessionDependency) -> JobStatus:

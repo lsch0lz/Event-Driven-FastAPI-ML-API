@@ -8,8 +8,7 @@ from celery import Celery
 from ultralytics import YOLO
 from PIL import Image
 
-from app.core.models.inference_job import InferenceJob
-from app.core.models.inference_response import Detection
+from app.core.models import InferenceJob, Detection
 
 celery_app = Celery("inference_task",
                     broker="pyamqp://guest@localhost//",
